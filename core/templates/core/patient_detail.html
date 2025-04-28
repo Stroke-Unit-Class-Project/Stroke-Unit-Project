@@ -1,0 +1,109 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h2>{{ patient.name }}</h2>
+        <p class="text-muted">
+            Age: {{ patient.age }} | Sex: {{ patient.get_sex_display }}
+        </p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Patient Information</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Chief Complaint:</strong><br>{{ patient.chief_complaint }}</p>
+                <p><strong>Medical History:</strong><br>{{ patient.medical_history }}</p>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Vital Signs</h5>
+                <a href="{% url 'add-vital-signs' patient.pk %}" class="btn btn-sm btn-primary">Add New</a>
+            </div>
+            <div class="card-body">
+                {% if vital_signs %}
+                    <p>
+                        <strong>Blood Pressure:</strong> {{ vital_signs.systolic_bp }}/{{ vital_signs.diastolic_bp }} mmHg<br>
+                        <strong>Heart Rate:</strong> {{ vital_signs.heart_rate }} bpm<br>
+                        <strong>Respiratory Rate:</strong> {{ vital_signs.respiratory_rate }} breaths/min<br>
+                        <strong>Oxygen Saturation:</strong> {{ vital_signs.oxygen_saturation }}%<br>
+                        <small class="text-muted">Recorded: {{ vital_signs.timestamp|date:"M d, Y H:i" }}</small>
+                    </p>
+                {% else %}
+                    <p class="text-muted">No vital signs recorded yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Lab Results</h5>
+                <a href="{% url 'add-lab-results' patient.pk %}" class="btn btn-sm btn-primary">Add New</a>
+            </div>
+            <div class="card-body">
+                {% if lab_results %}
+                    <p>
+                        <strong>CBC Status:</strong> {{ lab_results.cbc_status }}<br>
+                        <strong>BMP Status:</strong> {{ lab_results.bmp_status }}<br>
+                        <strong>Glucose Level:</strong> {{ lab_results.glucose_level }} mg/dL<br>
+                        <strong>Coagulation Status:</strong> {{ lab_results.coagulation_status }}<br>
+                        <small class="text-muted">Recorded: {{ lab_results.timestamp|date:"M d, Y H:i" }}</small>
+                    </p>
+                {% else %}
+                    <p class="text-muted">No lab results recorded yet.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Imaging Studies</h5>
+                <a href="{% url 'add-imaging-study' patient.pk %}" class="btn btn-sm btn-primary">Add New</a>
+            </div>
+            <div class="card-body">
+                {% if imaging_studies %}
+                    <p>
+                        <strong>Study Type:</strong> {{ imaging_studies.study_type }}<br>
+                        <strong>Findings:</strong> {{ imaging_studies.findings }}<br>
+                        {% if imaging_studies.image_url %}
+                            <a href="{{ imaging_studies.image_url }}" target="_blank">View Image</a><br>
+                        {% endif %}
+                        <small class="text-muted">Recorded: {{ imaging_studies.timestamp|date:"M d, Y H:i" }}</small>
+                    </p>
+                {% else %}
+                    <p class="text-muted">No imaging studies recorded yet.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Consultation</h5>
+                <a href="{% url 'add-consultation' patient.pk %}" class="btn btn-sm btn-primary">Add New</a>
+            </div>
+            <div class="card-body">
+                {% if consultations %}
+                    <p>
+                        <strong>Diagnosis:</strong> {{ consultations.diagnosis }}<br>
+                        <strong>Treatment Plan:</strong> {{ consultations.treatment_plan }}<br>
+                        <strong>NIHSS Score:</strong> {{ consultations.NIHSS_score }}<br>
+                        <strong>Neurologist Notes:</strong> {{ consultations.neurologist_notes }}<br>
+                        <small class="text-muted">Recorded: {{ consultations.timestamp|date:"M d, Y H:i" }}</small>
+                    </p>
+                {% else %}
+                    <p class="text-muted">No consultation recorded yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

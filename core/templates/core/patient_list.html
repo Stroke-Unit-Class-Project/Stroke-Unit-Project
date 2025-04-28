@@ -1,0 +1,43 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h2>Patients</h2>
+    </div>
+    <div class="col text-end">
+        <a href="{% url 'patient-create' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Add New Patient
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    {% for patient in patients %}
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">{{ patient.name }}</h5>
+                    <p class="card-text">
+                        <strong>Age:</strong> {{ patient.age }}<br>
+                        <strong>Sex:</strong> {{ patient.get_sex_display }}<br>
+                        <strong>Chief Complaint:</strong> {{ patient.chief_complaint|truncatewords:10 }}
+                    </p>
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'patient-detail' patient.pk %}" class="btn btn-primary">View Details</a>
+                    </div>
+                </div>
+                <div class="card-footer text-muted">
+                    Added: {{ patient.created_at|date:"M d, Y H:i" }}
+                </div>
+            </div>
+        </div>
+    {% empty %}
+        <div class="col">
+            <div class="alert alert-info">
+                No patients have been added yet.
+            </div>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %} 
