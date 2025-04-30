@@ -1,0 +1,19 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="role-selector text-center">
+            <h2 class="mb-4">Select Your Role</h2>
+            <div class="d-flex justify-content-center">
+                <a href="{% url 'set-role' 'technician' %}" class="btn btn-primary role-btn">
+                    <i class="fas fa-user-nurse"></i> Technician
+                </a>
+                <a href="{% url 'set-role' 'neurologist' %}" class="btn btn-primary role-btn">
+                    <i class="fas fa-user-md"></i> Neurologist
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

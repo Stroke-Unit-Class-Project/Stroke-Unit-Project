@@ -1,108 +1,268 @@
 {% extends 'core/base.html' %}
 
+{% block title %}{{ patient.name }} - Patient Details{% endblock %}
+
 {% block content %}
-<div class="row mb-4">
-    <div class="col">
-        <h2>{{ patient.name }}</h2>
-        <p class="text-muted">
-            Age: {{ patient.age }} | Sex: {{ patient.get_sex_display }}
-        </p>
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Patient Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Name:</strong> {{ patient.name }}</p>
+                        <p><strong>Age:</strong> {{ patient.age }}</p>
+                        <p><strong>Gender:</strong> {{ patient.get_sex_display }}</p>
+                        <p><strong>Chief Complaint:</strong> {{ patient.chief_complaint }}</p>
+                        <p><strong>Medical History:</strong> {{ patient.medical_history }}</p>
+                        <p><strong>Created At:</strong> {{ patient.created_at }}</p>
+                        <p><strong>Critical:</strong> {{ patient.is_critical|yesno:"Yes,No" }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Vital Signs</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Systolic BP</th>
+                                <th>Diastolic BP</th>
+                                <th>HR</th>
+                                <th>RR</th>
+                                <th>SpO2 (%)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for vital in vitals %}
+                            <tr>
+                                <td>{{ vital.timestamp }}</td>
+                                <td>{{ vital.systolic_bp }}</td>
+                                <td>{{ vital.diastolic_bp }}</td>
+                                <td>{{ vital.heart_rate }}</td>
+                                <td>{{ vital.respiratory_rate }}</td>
+                                <td>{{ vital.oxygen_saturation }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% if role == 'technician' %}
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addVitalSignsModal">
+                    Add Vital Signs
+                </button>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Lab Results</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>CBC Status</th>
+                                <th>BMP Status</th>
+                                <th>Glucose Level</th>
+                                <th>Coagulation Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for lab in labs %}
+                            <tr>
+                                <td>{{ lab.timestamp }}</td>
+                                <td>{{ lab.cbc_status }}</td>
+                                <td>{{ lab.bmp_status }}</td>
+                                <td>{{ lab.glucose_level }}</td>
+                                <td>{{ lab.coagulation_status }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% if role == 'technician' %}
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addLabResultsModal">
+                    Add Lab Results
+                </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Notifications</h5>
+            </div>
+            <div class="card-body">
+                {% if notifications %}
+                <div class="list-group">
+                    {% for notification in notifications %}
+                    <div class="list-group-item notification-item {{ notification.severity }}">
+                        <div class="d-flex justify-content-between">
+                            <strong>{{ notification.title }}</strong>
+                            <small>{{ notification.created_at|timesince }} ago</small>
+                        </div>
+                        <p class="mb-0">{{ notification.message }}</p>
+                        {% if not notification.is_read %}
+                        <form method="post" action="{% url 'mark-notification-read' notification.id %}" class="mt-2">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-outline-primary">Mark as Read</button>
+                        </form>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted">No notifications for this patient.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Imaging Studies</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group">
+                    {% for study in imaging_studies %}
+                    <div class="list-group-item">
+                        <h6 class="mb-1">{{ study.study_type }}</h6>
+                        <p class="mb-1"><small>{{ study.timestamp }}</small></p>
+                        <p class="mb-1">{{ study.findings }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% if role == 'technician' %}
+                <button class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#addImagingStudyModal">
+                    Add Imaging Study
+                </button>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Consultations</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group">
+                    {% for consult in consultations %}
+                    <div class="list-group-item">
+                        <h6 class="mb-1">Diagnosis: {{ consult.diagnosis }}</h6>
+                        <p class="mb-1"><strong>Treatment Plan:</strong> {{ consult.treatment_plan }}</p>
+                        <p class="mb-1"><strong>Neurologist Notes:</strong> {{ consult.neurologist_notes }}</p>
+                        <p class="mb-1"><strong>NIHSS Score:</strong> {{ consult.NIHSS_score }}</p>
+                        <p class="mb-1"><small>{{ consult.timestamp }}</small></p>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% if role == 'neurologist' %}
+                <button class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#addConsultationModal">
+                    Add Consultation
+                </button>
+                {% endif %}
+            </div>
+        </div>
     </div>
 </div>
 
-<div class="row">
-    <div class="col-md-6">
-        <div class="card mb-4">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Patient Information</h5>
+<!-- Add Vital Signs Modal -->
+<div class="modal fade" id="addVitalSignsModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Vital Signs</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="card-body">
-                <p><strong>Chief Complaint:</strong><br>{{ patient.chief_complaint }}</p>
-                <p><strong>Medical History:</strong><br>{{ patient.medical_history }}</p>
-            </div>
-        </div>
-
-        <div class="card mb-4">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Vital Signs</h5>
-                <a href="{% url 'add-vital-signs' patient.pk %}" class="btn btn-sm btn-primary">Add New</a>
-            </div>
-            <div class="card-body">
-                {% if vital_signs %}
-                    <p>
-                        <strong>Blood Pressure:</strong> {{ vital_signs.systolic_bp }}/{{ vital_signs.diastolic_bp }} mmHg<br>
-                        <strong>Heart Rate:</strong> {{ vital_signs.heart_rate }} bpm<br>
-                        <strong>Respiratory Rate:</strong> {{ vital_signs.respiratory_rate }} breaths/min<br>
-                        <strong>Oxygen Saturation:</strong> {{ vital_signs.oxygen_saturation }}%<br>
-                        <small class="text-muted">Recorded: {{ vital_signs.timestamp|date:"M d, Y H:i" }}</small>
-                    </p>
-                {% else %}
-                    <p class="text-muted">No vital signs recorded yet.</p>
-                {% endif %}
-            </div>
+            <form method="post" action="{% url 'add-vital-signs' patient.id %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    {{ vital_signs_form.as_p }}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
         </div>
     </div>
+</div>
 
-    <div class="col-md-6">
-        <div class="card mb-4">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Lab Results</h5>
-                <a href="{% url 'add-lab-results' patient.pk %}" class="btn btn-sm btn-primary">Add New</a>
+<!-- Add Lab Results Modal -->
+<div class="modal fade" id="addLabResultsModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Lab Results</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="card-body">
-                {% if lab_results %}
-                    <p>
-                        <strong>CBC Status:</strong> {{ lab_results.cbc_status }}<br>
-                        <strong>BMP Status:</strong> {{ lab_results.bmp_status }}<br>
-                        <strong>Glucose Level:</strong> {{ lab_results.glucose_level }} mg/dL<br>
-                        <strong>Coagulation Status:</strong> {{ lab_results.coagulation_status }}<br>
-                        <small class="text-muted">Recorded: {{ lab_results.timestamp|date:"M d, Y H:i" }}</small>
-                    </p>
-                {% else %}
-                    <p class="text-muted">No lab results recorded yet.</p>
-                {% endif %}
-            </div>
+            <form method="post" action="{% url 'add-lab-results' patient.id %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    {{ lab_results_form.as_p }}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
         </div>
+    </div>
+</div>
 
-        <div class="card mb-4">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Imaging Studies</h5>
-                <a href="{% url 'add-imaging-study' patient.pk %}" class="btn btn-sm btn-primary">Add New</a>
+<!-- Add Imaging Study Modal -->
+<div class="modal fade" id="addImagingStudyModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Imaging Study</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="card-body">
-                {% if imaging_studies %}
-                    <p>
-                        <strong>Study Type:</strong> {{ imaging_studies.study_type }}<br>
-                        <strong>Findings:</strong> {{ imaging_studies.findings }}<br>
-                        {% if imaging_studies.image_url %}
-                            <a href="{{ imaging_studies.image_url }}" target="_blank">View Image</a><br>
-                        {% endif %}
-                        <small class="text-muted">Recorded: {{ imaging_studies.timestamp|date:"M d, Y H:i" }}</small>
-                    </p>
-                {% else %}
-                    <p class="text-muted">No imaging studies recorded yet.</p>
-                {% endif %}
-            </div>
+            <form method="post" action="{% url 'add-imaging-study' patient.id %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    {{ imaging_study_form.as_p }}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
         </div>
+    </div>
+</div>
 
-        <div class="card mb-4">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Consultation</h5>
-                <a href="{% url 'add-consultation' patient.pk %}" class="btn btn-sm btn-primary">Add New</a>
+<!-- Add Consultation Modal -->
+<div class="modal fade" id="addConsultationModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Consultation</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="card-body">
-                {% if consultations %}
-                    <p>
-                        <strong>Diagnosis:</strong> {{ consultations.diagnosis }}<br>
-                        <strong>Treatment Plan:</strong> {{ consultations.treatment_plan }}<br>
-                        <strong>NIHSS Score:</strong> {{ consultations.NIHSS_score }}<br>
-                        <strong>Neurologist Notes:</strong> {{ consultations.neurologist_notes }}<br>
-                        <small class="text-muted">Recorded: {{ consultations.timestamp|date:"M d, Y H:i" }}</small>
-                    </p>
-                {% else %}
-                    <p class="text-muted">No consultation recorded yet.</p>
-                {% endif %}
-            </div>
+            <form method="post" action="{% url 'add-consultation' patient.id %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    {{ consultation_form.as_p }}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
